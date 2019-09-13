@@ -8,18 +8,17 @@
 
 #include <QApplication>
 #include <QObject>
-
+char* T = "Underwater_53k.jpg";
 int main(int argc, char *argv[])
 {
-
     // Windows and buttons
     QApplication a(argc, argv);
 
     ImageWindow processedImageWindow, original;
     processedImageWindow.setWindowTitle("Processed Image");
-    processedImageWindow.loadImage(argv[1]);
+    processedImageWindow.loadImage(T);
     original.setWindowTitle("Original Image");
-    original.loadImage(argv[1]);
+    original.loadImage(T);
     original.show();
     processedImageWindow.show();
 
