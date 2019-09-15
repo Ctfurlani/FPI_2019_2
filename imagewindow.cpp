@@ -4,9 +4,13 @@
 #include <QImage>
 
 
+
 ImageWindow::ImageWindow(QWidget *parent) : QWidget(parent)
 {
     label = new QLabel(this);
+    histogramWindow = new QWidget();
+    equalizedImageWindow = new QWidget();
+    equalizedHistogramWindow = new QWidget();
 }
 void ImageWindow::verticalFlip(){
     uint stride = this->width*3;
@@ -229,8 +233,44 @@ void ImageWindow::histogramComputation(){
 
 void ImageWindow::showHistogram(){
     histogramComputation();
-    for(int i = 0; i <256; ++i)
-        std::cout << this->histogram[i] << " ";
+    //Normalize histogram
+    double maximum, weight;
+    maximum = histogram[0];
+    for (int i = 0; i< 256; ++i) {
+        if (histogram[i] > maximum){
+            maximum = histogram[i];
+        }
+    }
+    weight = 256/maximum;
+
+    uchar *histImage;
+    histImage=static_cast<uchar*>( calloc(256*3*256, sizeof(uchar)) );
+    int stride = 256*3;
+    for(int i = 0; i < 256; ++i){
+        int barHeight = static_cast<int>(histogram[i]*weight);
+        for(int j = 0; j < 256; j++){
+            if (256-j > barHeight){
+                *(histImage+stride*j+3*i) =  255;
+                *(histImage+stride*j+3*i+1) =  255;
+                *(histImage+stride*j+3*i+2) =  255;
+            }
+            else{
+                *(histImage+stride*j+3*i) =  0;
+                *(histImage+stride*j+3*i+1) =  128;
+                *(histImage+stride*j+3*i+2) =  255;
+            }
+        }
+    }
+
+
+    QLabel *histLabel = new QLabel(histogramWindow);
+    QImage image(histImage, 256,256, QImage::Format_RGB888);
+    histLabel->setPixmap(QPixmap::fromImage(image));
+
+    histogramWindow->setWindowTitle("Histogram");
+    histogramWindow->setFixedSize(256,256);
+    histogramWindow->show();
+
 }
 
 void ImageWindow::brightness(int bright){
@@ -331,7 +371,6 @@ void ImageWindow::equalizeHistogram(){
 
     for (int i = 1; i <256 ; ++i){
         cumulativeHistogram[i]= static_cast<int>(cumulativeHistogram[i-1]+alpha*this->histogram[i]);
-        std::cout << cumulativeHistogram[i] << " ";
     }
     uint stride = 3*this->width;
     for (uint i = 0; i < this->height; ++i){
@@ -346,8 +385,20 @@ void ImageWindow::equalizeHistogram(){
          }
     }
 
-    QImage image2(currData, this->width, this->height, QImage::Format_RGB888);
+    //  Show equalized image in a separate window
+    QLabel *eqLabel = new QLabel(equalizedImageWindow);
+    QImage image(currData, this->width,this->height, QImage::Format_RGB888);
+    eqLabel->setPixmap(QPixmap::fromImage(image));
+    equalizedImageWindow->setWindowTitle("Equalized Image");
+    equalizedImageWindow->setFixedSize(this->width, this->height);
+    equalizedImageWindow->show();
+
+    // Show equalized image histogram in a separate window
+
+    QImage image2(this->imageData, this->width,this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image2));
+
+
 }
 
 

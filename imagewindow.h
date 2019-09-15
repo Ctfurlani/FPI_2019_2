@@ -2,6 +2,7 @@
 #define IMAGEWINDOW_H
 
 #include <QWidget>
+#include <QtCharts>
 
 extern "C"{
 #include "jpeg-9c/jpeglib.h"
@@ -31,14 +32,18 @@ public slots:
     void contrast(double cont);
     void negative();
     void equalizeHistogram();
-public:
+private:
     char *filename;
     JSAMPROW imageData;
     JDIMENSION width, height;
     QLabel *label;
 
+    QWidget *histogramWindow;
+    QWidget *equalizedImageWindow;
+    QWidget *equalizedHistogramWindow;
     int histogram[256];
     void histogramComputation();
+
 };
 
 #endif // ImageWindow

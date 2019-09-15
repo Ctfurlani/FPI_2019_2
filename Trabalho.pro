@@ -3,12 +3,12 @@
 # Project created by QtCreator 2019-08-27T21:42:39
 #
 #-------------------------------------------------
-
+QT      +=charts
 QT      += core gui
 
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-QT      +=charts
+
 
 TARGET = Trabalho
 TEMPLATE = app
