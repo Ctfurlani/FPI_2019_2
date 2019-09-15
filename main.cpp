@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     QObject::connect(&buttonWindow, SIGNAL( save(char*) ), &processedImageWindow, SLOT( saveImage(char*)) );
     QObject::connect(&buttonWindow, SIGNAL( quantization(int) ), &processedImageWindow, SLOT( quantization(int)) );
 
-    QObject::connect(&buttonWindow, SIGNAL( showHistogram() ), &processedImageWindow, SLOT( showHistogram()) );
+    QObject::connect(&buttonWindow, SIGNAL( showHistogram() ), &processedImageWindow, SLOT( imageHistogram()) );
     QObject::connect(&buttonWindow, SIGNAL( brightness(int) ), &processedImageWindow, SLOT( brightness(int)) );
     QObject::connect(&buttonWindow, SIGNAL( contrast(double) ), &processedImageWindow, SLOT( contrast(double)) );
     QObject::connect(&buttonWindow, SIGNAL( negative() ), &processedImageWindow, SLOT( negative()) );

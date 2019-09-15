@@ -27,7 +27,8 @@ public slots:
     void copyImage();
 
 
-    void showHistogram();
+    QImage showHistogram();
+    void imageHistogram();
     void brightness(int bright);
     void contrast(double cont);
     void negative();
