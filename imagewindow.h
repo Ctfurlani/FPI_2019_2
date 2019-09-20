@@ -34,8 +34,11 @@ public slots:
     void negative();
     void equalizeHistogram();
     void histogramMatching(char* filename);
+
+    void zoomOut(int h, int w);
+
 private:
-    char *filename;
+    char *filename = nullptr;
     JSAMPROW imageData;
     JDIMENSION width, height;
     QLabel *label;

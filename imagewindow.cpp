@@ -22,7 +22,7 @@ void ImageWindow::verticalFlip(){
         memcpy(this->imageData+(i*stride),this->imageData+(height-i)*stride, stride);
         memcpy(this->imageData+(height-i)*stride, tmp, stride);
     }
-    free(tmp);
+
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
 }
@@ -147,7 +147,12 @@ void ImageWindow::loadImage(char *filename){
     jpeg_destroy_decompress(&cinfo);
 
     fclose(infile);
-    this->filename = filename;
+    if (this->filename == nullptr){
+        this->filename = static_cast<char*>( calloc(strlen(filename), sizeof(char)) );
+        memcpy(this->filename, filename, strlen(filename)*sizeof (char));
+
+    }
+
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
     setFixedSize(this->width, this->height);
@@ -206,7 +211,6 @@ void ImageWindow::saveImage(char* filename){
     fclose(outfile);
     jpeg_destroy_compress(&cinfo);
 
-    std::cout << this->width<< " " << this->height;
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
 
@@ -541,7 +545,49 @@ int ImageWindow::closestShade(int shade, int *src, int *target){
 }
 
 
+//trab 2 parte 2
+void ImageWindow::zoomOut(int h, int w){
+    int stride = this->width*3;
 
+    // New Image
+    int newHeight, newWidth;
+    newHeight = this->height/h;
+    newWidth = this->width/w;
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(newHeight* newWidth *3, sizeof(uchar)) );
+                  //R  G  B
+    uchar sum[3] = {0, 0, 0};
+    int num = 0;
+
+    for (int i = 0; i < this->height; i+=h) {
+        for (int j = 0; j < this->width*3; j+=(w*3)){
+
+            //rectangle
+            for (int recLine = 0; recLine < h; ++recLine){
+                for (int recColumn = 0; recColumn < w*3; recColumn+=3){
+                    if ( (i+recLine < this->height) and (j+recColumn < this->width*3) ){
+                        // R channel
+                        sum[0] += *( this->imageData + (i+recLine)*stride + j+recColumn );
+                        // G channel
+                        sum[1] += *( this->imageData + (i+recLine)*stride + j+recColumn + 1 );
+                        // B channel
+                        sum[2] += *( this->imageData + (i+recLine)*stride + j+recColumn + 2 );
+                        ++num;
+                    }
+                }
+            }
+            sum[0]/=num;
+            sum[1]/=num;
+            sum[2]/=num;
+            memcpy(newImage+(i/h)*newWidth+j/(3*w), sum, sizeof(uchar)*3);
+            sum[0] = sum[1] = sum[2] = num = 0;
+        }
+    }
+
+    QImage image2(newImage, newWidth,newHeight, QImage::Format_RGB888);
+    setFixedSize(newWidth, newHeight);
+    label->setPixmap(QPixmap::fromImage(image2));
+
+}
 
 
 
