@@ -10,6 +10,7 @@
 #include <QObject>
 
 char* T = "Gramado_72k.jpg";
+char* U = "Underwater_53k.jpg";
 
 int main(int argc, char *argv[])
 {

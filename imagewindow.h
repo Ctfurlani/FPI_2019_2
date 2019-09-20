@@ -27,12 +27,13 @@ public slots:
     void copyImage();
 
 
-    QImage showHistogram();
+    QImage showHistogram(int *);
     void imageHistogram();
     void brightness(int bright);
     void contrast(double cont);
     void negative();
     void equalizeHistogram();
+    void histogramMatching(char* filename);
 private:
     char *filename;
     JSAMPROW imageData;
@@ -42,8 +43,10 @@ private:
     QWidget *histogramWindow;
     QWidget *equalizedImageWindow;
     QWidget *equalizedHistogramWindow;
-    int histogram[256];
-    void histogramComputation();
+    int *histogram;
+    int* histogramComputation(JSAMPROW data);
+    int closestShade(int shade, int *src, int *target);
+
 
 };
 
