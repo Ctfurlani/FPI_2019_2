@@ -22,7 +22,9 @@ int main(int argc, char *argv[])
     processedImageWindow.setWindowTitle("Processed Image");
     processedImageWindow.loadImage(U);
     processedImageWindow.move(600,0);
-    processedImageWindow.zoomOut(1,8);
+    processedImageWindow.zoomOut(2,2);
+    //processedImageWindow.zoomIn();
+    //processedImageWindow.zoomIn();
     processedImageWindow.show();
 
 

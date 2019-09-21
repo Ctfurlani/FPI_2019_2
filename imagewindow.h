@@ -36,6 +36,7 @@ public slots:
     void histogramMatching(char* filename);
 
     void zoomOut(int h, int w);
+    void zoomIn();
 
 private:
     char *filename = nullptr;

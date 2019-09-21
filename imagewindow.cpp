@@ -547,7 +547,7 @@ int ImageWindow::closestShade(int shade, int *src, int *target){
 
 //trab 2 parte 2
 void ImageWindow::zoomOut(int h, int w){
-    int stride = this->width*3;
+    int stride = static_cast<int>(this->width*3);
 
     // New Image
     int newHeight, newWidth;
@@ -559,8 +559,8 @@ void ImageWindow::zoomOut(int h, int w){
     uchar RGB[3];
     int num = 0;
 
-    for (int i = 0; i < this->height; i+=h) {
-        for (int j = 0; j < this->width*3; j+=(w*3)){
+    for (int i = 0; i < static_cast<int>(this->height); i+=h) {
+        for (int j = 0; j < static_cast<int>(this->width)*3; j+=(w*3)){
 
             //rectangle
             for (int recLine = 0; recLine < h; ++recLine){
@@ -573,8 +573,7 @@ void ImageWindow::zoomOut(int h, int w){
                         // B channel
                         sum[2] += *( this->imageData + (i+recLine)*stride + j+recColumn + 2 );
                         ++num;
-                    }else
-                        int a =0;
+                    }
                 }
             }
             // For each pixel in final image
@@ -587,14 +586,68 @@ void ImageWindow::zoomOut(int h, int w){
             sum[0] = sum[1] = sum[2] = num = 0;
         }
     }
+    delete(this->imageData);
+    this->imageData = newImage;
+    this->width = static_cast<JDIMENSION>(newWidth);
+    this->height = static_cast<JDIMENSION>(newHeight);
 
-    QImage image2(newImage, newWidth,newHeight, QImage::Format_RGB888);
+    QImage image2(this->imageData, newWidth,newHeight, QImage::Format_RGB888);
     setFixedSize(newWidth, newHeight);
     label->setPixmap(QPixmap::fromImage(image2));
 
 }
 
+void ImageWindow::zoomIn(){
+    int newHeight, newWidth;
 
+    newHeight = static_cast<int>(2*this->height);
+    newWidth = static_cast<int>(2*this->width);
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc((newHeight*newWidth*3),sizeof(uchar)) );
+
+    // insert new lines and columns between original image
+    for (uint i = 0; i < this->height; ++i){
+        //insert columns between pixels
+        for (uint j = 0; j < this->width*3; j+=3){
+            memcpy(newImage + (2*i)*newWidth*3 + 2*j , this->imageData+(i*this->width*3) + j, sizeof(uchar)*3);
+        }
+    }
+    // interpolate for lines with colour first
+    for (int i = 0; i < newHeight; i+=2){
+        for (int j = 0; j < newWidth * 3; j+=6) {
+            uchar colour[9];
+            memcpy(colour, newImage+i*newWidth*3 +j, sizeof(uchar)*9);
+            colour[3] = (colour[0]/2 + colour[6]/2);
+            colour[4] = (colour[1]/2 + colour[7]/2);
+            colour[5] = (colour[2]/2 + colour[8]/2);
+            memcpy(newImage+i*newWidth*3+j, colour, sizeof(uchar)*9);
+        }
+
+    }
+    // interpolate for missing lines using columns
+    for (int i = 0; i < newHeight; i+=2){
+        for (int j = 0; j < newWidth*3; j+=3) {
+            uchar colour[6];
+            uchar resultRGB[3];
+            memcpy(colour, newImage+i*newWidth*3 + j, sizeof(uchar)*3);
+            memcpy(colour+3, newImage+(i+2)*newWidth*3 + j, sizeof(uchar)*3);
+            resultRGB[0] = colour[0]/2 + colour[3]/2;
+            resultRGB[1] = colour[1]/2 + colour[4]/2;
+            resultRGB[2] = colour[2]/2 + colour[5]/2;
+            memcpy(newImage+(i+1)*newWidth*3+j, resultRGB, sizeof(uchar)*3);
+        }
+
+    }
+
+    delete(this->imageData);
+    this->imageData = newImage;
+    this->width = static_cast<JDIMENSION>(newWidth);
+    this->height = static_cast<JDIMENSION>(newHeight);
+
+    QImage image2(this->imageData, newWidth,newHeight, QImage::Format_RGB888);
+    setFixedSize(newWidth, newHeight);
+    label->setPixmap(QPixmap::fromImage(image2));
+
+}
 
 
 
