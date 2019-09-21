@@ -20,15 +20,15 @@ int main(int argc, char *argv[])
     ImageWindow processedImageWindow, original;
 
     processedImageWindow.setWindowTitle("Processed Image");
-    processedImageWindow.loadImage(T);
+    processedImageWindow.loadImage(U);
     processedImageWindow.move(600,0);
-    processedImageWindow.zoomOut(1,1);
+    processedImageWindow.zoomOut(1,8);
     processedImageWindow.show();
 
 
 
     original.setWindowTitle("Original Image");
-    original.loadImage(T);
+    original.loadImage(U);
     original.move(0,0);
     original.show();
 

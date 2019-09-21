@@ -551,11 +551,12 @@ void ImageWindow::zoomOut(int h, int w){
 
     // New Image
     int newHeight, newWidth;
-    newHeight = this->height/h;
-    newWidth = this->width/w;
-    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(newHeight* newWidth *3, sizeof(uchar)) );
+    newHeight = static_cast<int>(ceil(this->height*1.0/h));
+    newWidth = static_cast<int>(ceil(this->width*1.0/w));
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(newHeight * newWidth *3, sizeof(uchar)) );
                   //R  G  B
-    uchar sum[3] = {0, 0, 0};
+    int sum[3] = {0, 0, 0};
+    uchar RGB[3];
     int num = 0;
 
     for (int i = 0; i < this->height; i+=h) {
@@ -572,13 +573,17 @@ void ImageWindow::zoomOut(int h, int w){
                         // B channel
                         sum[2] += *( this->imageData + (i+recLine)*stride + j+recColumn + 2 );
                         ++num;
-                    }
+                    }else
+                        int a =0;
                 }
             }
-            sum[0]/=num;
-            sum[1]/=num;
-            sum[2]/=num;
-            memcpy(newImage+(i/h)*newWidth+j/(3*w), sum, sizeof(uchar)*3);
+            // For each pixel in final image
+            RGB[0] = static_cast<uchar>(ceil(sum[0]*1.0/num));
+            RGB[1] = static_cast<uchar>(ceil(sum[1]*1.0/num));
+            RGB[2] = static_cast<uchar>(ceil(sum[2]*1.0/num));
+            int line = static_cast<int>( ceil(i*1.0/h) );
+            int column = static_cast<int>(ceil(j*1.0/w));
+            memcpy(newImage+(line*newWidth*3)+column, RGB, sizeof(uchar)*3);
             sum[0] = sum[1] = sum[2] = num = 0;
         }
     }
