@@ -655,7 +655,7 @@ void ImageWindow::zoomIn(){
 
 }
 
-// anti-clockwise
+// counter clockwise
 void ImageWindow::rotate90(){
 
     int newWidth = static_cast<int>(this->height);
