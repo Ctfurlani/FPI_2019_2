@@ -18,9 +18,9 @@ void ImageWindow::verticalFlip(){
 
     uchar *tmp = static_cast<uchar*>(calloc(stride, sizeof(uchar)));
     for(uint i = 0; i < this->height/2; ++i){
-        memcpy(tmp, this->imageData+(i*stride), stride);
-        memcpy(this->imageData+(i*stride),this->imageData+(height-i)*stride, stride);
-        memcpy(this->imageData+(height-i)*stride, tmp, stride);
+        memcpy(tmp, this->imageData+(i*stride), sizeof(uchar)*stride);
+        memcpy(this->imageData+(i*stride),this->imageData+(height-i)*stride, sizeof(uchar)*stride);
+        memcpy(this->imageData+(height-i)*stride, tmp, sizeof(uchar)*stride);
     }
 
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
@@ -128,7 +128,9 @@ void ImageWindow::loadImage(char *filename){
     row_stride = cinfo.output_width * cinfo.output_components;
     buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-    this->imageData =  static_cast<JSAMPLE*>(calloc(cinfo.output_width*cinfo.output_height*cinfo.output_components, sizeof (JSAMPLE)));
+    if (this->imageData == nullptr){
+         this->imageData =  static_cast<JSAMPLE*>(calloc(cinfo.output_width*cinfo.output_height*cinfo.output_components, sizeof (JSAMPLE)));
+    }
     this->width = cinfo.output_width;
     this->height = cinfo.output_height;
 
@@ -153,10 +155,9 @@ void ImageWindow::loadImage(char *filename){
 
     }
 
-    QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
-    label->setPixmap(QPixmap::fromImage(image));
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
     setFixedSize(this->width, this->height);
-    //return 0;
+    label->setPixmap(QPixmap::fromImage(image2));
 }
 
 /*
@@ -586,8 +587,11 @@ void ImageWindow::zoomOut(int h, int w){
             sum[0] = sum[1] = sum[2] = num = 0;
         }
     }
-    delete(this->imageData);
-    this->imageData = newImage;
+
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
+    memcpy(this->imageData, newImage, sizeof(uchar)*3*newWidth*newHeight);
+    free(newImage);
+
     this->width = static_cast<JDIMENSION>(newWidth);
     this->height = static_cast<JDIMENSION>(newHeight);
 
@@ -638,16 +642,45 @@ void ImageWindow::zoomIn(){
 
     }
 
-    delete(this->imageData);
-    this->imageData = newImage;
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
+    memcpy(this->imageData, newImage, sizeof(uchar)*3*newWidth*newHeight);
+    free(newImage);
+
     this->width = static_cast<JDIMENSION>(newWidth);
     this->height = static_cast<JDIMENSION>(newHeight);
 
-    QImage image2(this->imageData, newWidth,newHeight, QImage::Format_RGB888);
-    setFixedSize(newWidth, newHeight);
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
 
 }
 
+// anti-clockwise
+void ImageWindow::rotate90(){
 
+    int newWidth = static_cast<int>(this->height);
+    int newHeight = static_cast<int>(this->width);
 
+    uchar *line = static_cast<uchar*>( calloc(this->width*3, sizeof(uchar)) );
+    JSAMPROW rotatedImage = static_cast<JSAMPROW>( calloc(this->width*3*this->height, sizeof (uchar)));
+
+    //swap row for column ( bottom up)
+    for (int i = 0; i < static_cast<int>(this->height); ++i){
+        memcpy(line, this->imageData + i*this->width*3, sizeof (uchar)*this->width*3);
+        for (int j = 0; j  < newHeight; ++j){
+                memcpy(rotatedImage+j*newWidth*3 + 3*i, line + 3*(newHeight - j), sizeof (uchar)*3);
+        }
+    }
+
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
+    memcpy(this->imageData, rotatedImage, sizeof(uchar)*3*newWidth*newHeight);
+    free(rotatedImage);
+
+    this->width = static_cast<JDIMENSION>(newWidth);
+    this->height = static_cast<JDIMENSION>(newHeight);
+
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
+    label->setPixmap(QPixmap::fromImage(image2));
+
+}

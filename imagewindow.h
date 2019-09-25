@@ -37,17 +37,18 @@ public slots:
 
     void zoomOut(int h, int w);
     void zoomIn();
+    void rotate90();
 
 private:
     char *filename = nullptr;
-    JSAMPROW imageData;
+    JSAMPROW imageData = nullptr;
     JDIMENSION width, height;
     QLabel *label;
 
-    QWidget *histogramWindow;
-    QWidget *equalizedImageWindow;
-    QWidget *equalizedHistogramWindow;
-    int *histogram;
+    QWidget *histogramWindow = nullptr;
+    QWidget *equalizedImageWindow = nullptr;
+    QWidget *equalizedHistogramWindow = nullptr;
+    int *histogram = nullptr;
     int* histogramComputation(JSAMPROW data);
     int closestShade(int shade, int *src, int *target);
 
