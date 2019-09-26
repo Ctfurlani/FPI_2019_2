@@ -2,6 +2,7 @@
 #include <QPushButton>
 #include <QInputDialog>
 #include <QLabel>
+#include <QGroupBox>
 #include <QDir>
 #include <iostream>
 
@@ -13,8 +14,7 @@ ButtonWindow::ButtonWindow(QWidget *parent) : QWidget(parent)
     setFixedSize(buttonWidth + 20, buttonHeight*n + 20 + (n-1)*10);
     // Create and position the buttons
 
-    //QOL buttons
-
+    //QOL buttons 
     copyButton = new QPushButton("Copy Image", this);
     copyButton->setGeometry(15, 10, buttonWidth, buttonHeight);
 
@@ -136,4 +136,20 @@ void ButtonWindow::copyClicked(){
 }
 void ButtonWindow::equalizeClicked(){
     emit equalize();
+}
+
+void ButtonWindow::zoomOutClicked(){
+
+}
+void ButtonWindow::zoomInClicked(){
+
+}
+void ButtonWindow::rotateClockClicked(){
+
+}
+void ButtonWindow::rotateCounterClicked(){
+
+}
+void ButtonWindow::applyFilterClicked(){
+
 }

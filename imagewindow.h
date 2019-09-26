@@ -37,7 +37,9 @@ public slots:
 
     void zoomOut(int h, int w);
     void zoomIn();
-    void rotate90();
+    void rotate90CounterClockwise();
+    void rotate90Clockwise();
+    void applyFilter(double *, bool);
 
 private:
     char *filename = nullptr;

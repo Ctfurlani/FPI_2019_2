@@ -2,6 +2,7 @@
 #define BUTTONWINDOW_H
 
 #include <QApplication>
+#include <QLabel>
 #include <QWidget>
 
 class QPushButton;
@@ -32,11 +33,20 @@ private slots:
     void saveClicked();
     void copyClicked();
 
+    // Trab 2 Part 1
     void histogramClicked();
     void brightClicked();
     void contrastClicked();
     void negativeClicked();
     void equalizeClicked();
+
+    // Trab 2 Part 2
+    void zoomOutClicked();
+    void zoomInClicked();
+    void rotateClockClicked();
+    void rotateCounterClicked();
+    void applyFilterClicked();
+
 private:
     //QOL buttons
 
@@ -54,6 +64,12 @@ private:
     QPushButton *contrastButton;
     QPushButton *negativeButton;
     QPushButton *equalizeButton;
+
+    QPushButton *rotateClockwise;
+    QPushButton *rotateCounterClockwise;
+    QPushButton *zoomIn;
+    QPushButton *zoomOut;
+    QPushButton *applyFilter;
 };
 
 #endif // BUTTONWINDOW_H

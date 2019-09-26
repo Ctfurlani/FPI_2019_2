@@ -548,54 +548,43 @@ int ImageWindow::closestShade(int shade, int *src, int *target){
 
 //trab 2 parte 2
 void ImageWindow::zoomOut(int h, int w){
-    int stride = static_cast<int>(this->width*3);
+    JDIMENSION newWidth, newHeight;
 
-    // New Image
-    int newHeight, newWidth;
-    newHeight = static_cast<int>(ceil(this->height*1.0/h));
-    newWidth = static_cast<int>(ceil(this->width*1.0/w));
-    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(newHeight * newWidth *3, sizeof(uchar)) );
-                  //R  G  B
-    int sum[3] = {0, 0, 0};
+    newHeight = static_cast<JDIMENSION>( ceil(this->height*1.0/h) );
+    newWidth = static_cast<JDIMENSION>( ceil(this->width*1.0/w) );
+
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(newWidth*newHeight*3, sizeof(uchar)) );
+    int stride = static_cast<int>(this->width*3);
     uchar RGB[3];
+    int sum[3] = {0};
+    int rec_i = 0;
+    int rec_j = 0;
     int num = 0;
 
-    for (int i = 0; i < static_cast<int>(this->height); i+=h) {
-        for (int j = 0; j < static_cast<int>(this->width)*3; j+=(w*3)){
+    for (int i = 0; i < static_cast<int>(this->height); i+=h){
+        for (int j = 0; j < stride; j+= (w*3) ){
+            // rectangle
+            for (rec_i = 0; rec_i < h; ++rec_i){
+                for (rec_j = 0; rec_j < w*3; rec_j+=3){
 
-            //rectangle
-            for (int recLine = 0; recLine < h; ++recLine){
-                for (int recColumn = 0; recColumn < w*3; recColumn+=3){
-                    if ( (i+recLine < this->height) and (j+recColumn < this->width*3) ){
-                        // R channel
-                        sum[0] += *( this->imageData + (i+recLine)*stride + j+recColumn );
-                        // G channel
-                        sum[1] += *( this->imageData + (i+recLine)*stride + j+recColumn + 1 );
-                        // B channel
-                        sum[2] += *( this->imageData + (i+recLine)*stride + j+recColumn + 2 );
+                    if ( ((i+rec_i) < static_cast<int>(this->height)) and (j+rec_j < static_cast<int>(this->width*3) ) ){
+                        sum[0] += *( this->imageData + (i+rec_i)*stride + (j+rec_j));
+                        sum[1] += *( this->imageData + (i+rec_i)*stride + (j+rec_j + 1));
+                        sum[2] += *( this->imageData + (i+rec_i)*stride + (j+rec_j + 2));
                         ++num;
                     }
                 }
             }
-            // For each pixel in final image
-            RGB[0] = static_cast<uchar>(ceil(sum[0]*1.0/num));
-            RGB[1] = static_cast<uchar>(ceil(sum[1]*1.0/num));
-            RGB[2] = static_cast<uchar>(ceil(sum[2]*1.0/num));
-            int line = static_cast<int>( ceil(i*1.0/h) );
-            int column = static_cast<int>(ceil(j*1.0/w));
-            memcpy(newImage+(line*newWidth*3)+column, RGB, sizeof(uchar)*3);
-            sum[0] = sum[1] = sum[2] = num = 0;
+            RGB[0] = static_cast<uchar>( ceil(sum[0]*1.0/num) );
+            RGB[1] = static_cast<uchar>( ceil(sum[1]*1.0/num) );
+            RGB[2] = static_cast<uchar>( ceil(sum[2]*1.0/num) );
+            sum[0] = sum[1] = sum[2] = 0;
+            num = 0;
+            memcpy( newImage + static_cast<int>(ceil(i*(newWidth*3.0)/h)) + static_cast<int>(ceil(j*1.0/w)), RGB, sizeof(uchar)*3);
         }
     }
 
-    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
-    memcpy(this->imageData, newImage, sizeof(uchar)*3*newWidth*newHeight);
-    free(newImage);
-
-    this->width = static_cast<JDIMENSION>(newWidth);
-    this->height = static_cast<JDIMENSION>(newHeight);
-
-    QImage image2(this->imageData, newWidth,newHeight, QImage::Format_RGB888);
+    QImage image2(newImage, newWidth, newHeight, QImage::Format_RGB888);
     setFixedSize(newWidth, newHeight);
     label->setPixmap(QPixmap::fromImage(image2));
 
@@ -656,7 +645,7 @@ void ImageWindow::zoomIn(){
 }
 
 // counter clockwise
-void ImageWindow::rotate90(){
+void ImageWindow::rotate90CounterClockwise(){
 
     int newWidth = static_cast<int>(this->height);
     int newHeight = static_cast<int>(this->width);
@@ -682,5 +671,77 @@ void ImageWindow::rotate90(){
     QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
     setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
+
+}
+
+void ImageWindow::rotate90Clockwise(){
+    int newWidth = static_cast<int>(this->height);
+    int newHeight = static_cast<int>(this->width);
+
+    uchar *line = static_cast<uchar*>( calloc(this->width*3, sizeof(uchar)) );
+    JSAMPROW rotatedImage = static_cast<JSAMPROW>( calloc(this->width*3*this->height, sizeof (uchar)));
+
+    //swap row for column top bottom
+    for (int i = 0; i < static_cast<int>(this->height); ++i){
+        memcpy(line, this->imageData + i*this->width*3, sizeof (uchar)*this->width*3);
+        for (int j = 0; j  < newHeight; ++j){
+                memcpy(rotatedImage+j*newWidth*3 + 3*(newWidth-1-i), line + 3*j, sizeof (uchar)*3);
+        }
+    }
+
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
+    memcpy(this->imageData, rotatedImage, sizeof(uchar)*3*newWidth*newHeight);
+    free(rotatedImage);
+
+    this->width = static_cast<JDIMENSION>(newWidth);
+    this->height = static_cast<JDIMENSION>(newHeight);
+
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
+    label->setPixmap(QPixmap::fromImage(image2));
+}
+
+
+void ImageWindow::applyFilter(double *invKernel, bool add127){
+    greyScale();
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(this->width*3*this->height, sizeof(uchar)) );
+
+    double colour[9];
+    uchar shade = 0;
+
+    for (uint i = 1; i < (this->height-1); ++i){
+        for (uint j = 3; j < (this->width-1)*3; j+=3){
+
+            colour[0] = *invKernel   *  *(this->imageData+(i-1)*this->width*3+(j-3));
+            colour[1] = *(invKernel+1) * *(this->imageData+(i-1)*this->width*3+(j));
+            colour[2] = *(invKernel+2) * *(this->imageData+(i-1)*this->width*3+(j+3));
+            colour[3] = *(invKernel+3) * *(this->imageData+(i)*this->width*3+(j-3));
+            colour[4] = *(invKernel+4) * *(this->imageData+(i)*this->width*3+(j));
+            colour[5] = *(invKernel+5) * *(this->imageData+(i)*this->width*3+(j+3));
+            colour[6] = *(invKernel+6) * *(this->imageData+(i+1)*this->width*3+(j-3));
+            colour[7] = *(invKernel+7) * *(this->imageData+(i+1)*this->width*3+(j));
+            colour[8] = *(invKernel+8) * *(this->imageData+(i+1)*this->width*3+(j+3));
+
+            for (int index = 1; index < 9; ++index){
+                colour[0] += colour[index];
+            }
+            if (add127) colour[0] += 127;
+            if (colour[0] > 255) colour[0] = 255;
+            if (colour[0] < 0) colour[0] = 0;
+
+            shade = static_cast<uchar>(ceil(colour[0]));
+            memcpy(newImage+i*this->width*3 + j, &shade, sizeof (uchar));
+            memcpy(newImage+i*this->width*3 + j+1, &shade, sizeof (uchar));
+            memcpy(newImage+i*this->width*3 + j+2, &shade, sizeof (uchar));
+        }
+    }
+
+    free(this->imageData);
+    this->imageData = newImage;
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
+    label->setPixmap(QPixmap::fromImage(image2));
+
+
 
 }

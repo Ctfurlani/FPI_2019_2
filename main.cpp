@@ -16,13 +16,16 @@ int main(int argc, char *argv[])
 {
     // Windows and buttons
     QApplication a(argc, argv);
+    double filter[9] = {0.0625, 0.125, 0.0625, 0.125, 0.25, 0.125, 0.0625, 0.125, 0.0625};
+    //double filter[9] = {0, 0, 0, -0.5, 1, -0.5, 0, 0, 0};
 
     ImageWindow processedImageWindow, original;
 
     processedImageWindow.setWindowTitle("Processed Image");
     processedImageWindow.loadImage(U);
     processedImageWindow.move(600,0);
-    processedImageWindow.zoomOut(1,3);
+    processedImageWindow.applyFilter(filter, false);
+    //processedImageWindow.zoomOut(1,3);
     processedImageWindow.show();
 
 
