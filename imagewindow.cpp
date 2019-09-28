@@ -369,62 +369,53 @@ void ImageWindow::negative(){
 }
 
 void ImageWindow::equalizeHistogram(){
-    //Save current image
-    JSAMPROW currData = static_cast<JSAMPROW>(calloc(this->width*this->height*3, sizeof(uchar)));
-
+    double doubleCumHist[256];
     int cumulativeHistogram[256];
     double alpha = 255.0/(this->height*this->width);
 
+    // new Image
+    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+
     this->histogram = histogramComputation(this->imageData);
+    doubleCumHist[0] = alpha* *this->histogram;
+
+    for (int i = 1; i < 256; ++i){
+        doubleCumHist[i] = doubleCumHist[i-1] + alpha* *(this->histogram+i);
+    }
+    for (int i = 0; i < 256; ++i){
+        cumulativeHistogram[i] = static_cast<int>( doubleCumHist[i] );
+        std::cout << cumulativeHistogram[i] << " ";
+    }
+
+    for (int i = 0; i < this->height; ++i){
+        for (int j= 0; j < this->width*3; j+=3){
+            *(newImage+i*this->width*3+j) = cumulativeHistogram[*(this->imageData+i*this->width*3+j)];
+            *(newImage+i*this->width*3+j+1) = cumulativeHistogram[*(this->imageData+i*this->width*3+j+1)];
+            *(newImage+i*this->width*3+j+2) = cumulativeHistogram[*(this->imageData+i*this->width*3+j+2)];
+        }
+    }
+    // Original Histogram
     QLabel *histLabel = new QLabel(histogramWindow);
     histLabel->setPixmap(QPixmap::fromImage(showHistogram(this->histogram)));
-    histogramWindow->setWindowTitle("Original Histogram");
+    histogramWindow->setWindowTitle("Histogram");
     histogramWindow->setFixedSize(256,256);
     histogramWindow->show();
 
-    // Image just before equalization
-    memcpy(currData, this->imageData, sizeof(uchar)*this->width*this->height*3);
-    cumulativeHistogram[0] = static_cast<int>(alpha*this->histogram[0]);
-
-    for (int i = 1; i <256 ; ++i){
-        cumulativeHistogram[i]= static_cast<int>(cumulativeHistogram[i-1]+alpha*this->histogram[i]);
-    }
-    uint stride = 3*this->width;
-    for (uint i = 0; i < this->height; ++i){
-        for (uint j = 0; j < stride; j+=3){
-            //R
-            *(this->imageData+i*stride+j) = static_cast<uchar>(cumulativeHistogram[*(this->imageData+i*stride+j)]);
-            //G
-            *(this->imageData+i*stride+j+1) = static_cast<uchar>(cumulativeHistogram[*(this->imageData+i*stride+j+1)]);
-            //B
-            *(this->imageData+i*stride+j+2) = static_cast<uchar>(cumulativeHistogram[*(this->imageData+i*stride+j+2)]);
-
-         }
-    }
-
-    //  Show equalized image in a separate window
-    QLabel *eqLabel = new QLabel(equalizedImageWindow);
-    QImage image(this->imageData, this->width,this->height, QImage::Format_RGB888);
-    eqLabel->setPixmap(QPixmap::fromImage(image));
-    equalizedImageWindow->setWindowTitle("Equalized Image");
-    equalizedImageWindow->setFixedSize(this->width, this->height);
-    equalizedImageWindow->show();
-
-    this->histogram = histogramComputation(this->imageData);
-    //  Show equalized histogram
+    int *newHist = static_cast<int*>(calloc(256, sizeof (int)));
+    newHist = histogramComputation(newImage);
+    //Equalized histogram
     QLabel *eqHistLabel = new QLabel(equalizedHistogramWindow);
-    eqHistLabel->setPixmap(QPixmap::fromImage(showHistogram(this->histogram)));
-    equalizedHistogramWindow->setWindowTitle("Equalized Histogram");
+    eqHistLabel->setPixmap(QPixmap::fromImage(showHistogram((newHist))));
+    equalizedHistogramWindow->setWindowTitle("Eq Histogram");
     equalizedHistogramWindow->setFixedSize(256,256);
     equalizedHistogramWindow->show();
 
-    //Restores image
-    memcpy(this->imageData, currData, sizeof(uchar)*this->width*this->height*3);
-    // Update image
-    QImage image2(this->imageData, this->width,this->height, QImage::Format_RGB888);
-    label->setPixmap(QPixmap::fromImage(image2));
-    free(currData);
-
+    // Equalized Image
+    QLabel *eqImage = new QLabel(equalizedImageWindow);
+    QImage image2(newImage, this->width, this->height, QImage::Format_RGB888);
+    eqImage->setPixmap(QPixmap::fromImage(image2));
+    equalizedImageWindow->setFixedSize(this->width, this->height);
+    equalizedImageWindow->show();
 
 }
 
@@ -566,6 +557,7 @@ void ImageWindow::zoomOut(int h, int w){
     int rec_i = 0;
     int rec_j = 0;
     int num = 0;
+    int newI = 0, newJ = 0;
 
     for (int i = 0; i < static_cast<int>(this->height); i+=h){
         for (int j = 0; j < stride; j+= (w*3) ){
