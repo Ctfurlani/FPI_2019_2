@@ -145,12 +145,14 @@ void ButtonWindow::createZoomGroup(){
     // Create Connections
     connect( zoomInButton, SIGNAL( clicked(bool)), this, SLOT(zoomInClicked()) );
     connect( rotateClockwiseButton, SIGNAL( clicked(bool)), this, SLOT( rotateClockClicked() ));
+    connect( rotateCounterClockwiseButton, SIGNAL (clicked (bool)), this, SLOT (rotateCounterClicked()));
+    connect( zoomOutButton, SIGNAL( clicked(bool)), this, SLOT (zoomOutClicked()));
 
 
 }
 void ButtonWindow::createConvGroup(){
     gaussianFilterButton = new QPushButton("Gaussian", this);
-    laplacianFilteButtonr = new QPushButton("Laplacian", this);
+    laplacianFilterButton = new QPushButton("Laplacian", this);
     highPassFilterButton = new QPushButton("High Pass", this);
     prewittHxFilterButton = new QPushButton("Prewitt Hx", this);
     prewittHyFilterButton = new QPushButton("Prewitt Hy", this);
@@ -161,7 +163,7 @@ void ButtonWindow::createConvGroup(){
     convolutionGroup = new QGroupBox("Convolution Filters");
     QVBoxLayout *convLayout = new QVBoxLayout;
     convLayout->addWidget(gaussianFilterButton);
-    convLayout->addWidget(laplacianFilteButtonr);
+    convLayout->addWidget(laplacianFilterButton);
     convLayout->addWidget(highPassFilterButton);
     convLayout->addWidget(prewittHxFilterButton);
     convLayout->addWidget(prewittHyFilterButton);
@@ -171,6 +173,17 @@ void ButtonWindow::createConvGroup(){
     convLayout->addWidget(convoluteButton);
 
     convolutionGroup->setLayout(convLayout);
+
+    // Connect
+    connect( gaussianFilterButton, SIGNAL( clicked(bool)), this, SLOT( gaussianClicked()) );
+    connect( laplacianFilterButton, SIGNAL( clicked(bool)), this, SLOT( laplacianClicked()) );
+    connect( highPassFilterButton, SIGNAL( clicked(bool)), this, SLOT( highPassClicked()));
+    connect( prewittHxFilterButton, SIGNAL( clicked(bool)), this, SLOT( prewittHxClicked()));
+    connect( prewittHyFilterButton, SIGNAL( clicked(bool)), this, SLOT( prewittHyCLicked()));
+    connect( sobelHxFilterButton, SIGNAL( clicked(bool)), this, SLOT( sobelHxClicked()));
+    connect( sobelHyFilterButton, SIGNAL( clicked(bool)), this, SLOT( sobelHyClicked()));
+    connect( convoluteButton, SIGNAL(clicked(bool)), this, SLOT( convoluteClicked()));
+
 }
 
 
@@ -190,13 +203,7 @@ void ButtonWindow::histogramClicked(){
     emit showHistogram();
 }
 void ButtonWindow::quantClicked(){
-    QLabel *integerLabel = new QLabel(this);
-    bool ok;
-    int i = QInputDialog::getInt(this, tr("Quantization"), tr("Number of shades:"), 256, 1, 256, 1, &ok);
-    if (ok){
-        integerLabel->setText(tr("%1%").arg(i));
-        emit quantization(i);
-    }
+    emit quantization(quantShades->value());
 }
 
 void ButtonWindow::saveClicked(){
@@ -212,24 +219,13 @@ void ButtonWindow::saveClicked(){
 }
 
 void ButtonWindow::brightClicked(){
-    QLabel *integerLabel = new QLabel(this);
-    bool ok;
-    int i = QInputDialog::getInt(this, tr("Brightness"), tr("Change brightness:"), 0, -255, 255, 1, &ok);
-    if (ok){
-        integerLabel->setText(tr("%1%").arg(i));
-        emit brightness(i);
-    }
+    emit brightness(brightValue->value());
+
 }
 
 
 void ButtonWindow::contrastClicked(){
-    QLabel *integerLabel = new QLabel(this);
-    bool ok;
-    double i = QInputDialog::getDouble(this, tr("Brightness"), tr("Change brightness:"), 1, 0, 255, 2, &ok);
-    if (ok and i>0){
-        integerLabel->setText(tr("%1%").arg(i));
-        emit contrast(i);
-    }
+  emit contrast(contrastValue->value());
 }
 
 void ButtonWindow::negativeClicked(){
@@ -244,6 +240,9 @@ void ButtonWindow::equalizeClicked(){
 }
 
 void ButtonWindow::zoomOutClicked(){
+    int value1 = zoomOutValue1->value();
+    int value2 = zoomOutValue2->value();
+    emit zoomOut(value1, value2);
 
 }
 void ButtonWindow::zoomInClicked(){
@@ -254,8 +253,32 @@ void ButtonWindow::rotateClockClicked(){
     emit rotateClockwise();
 }
 void ButtonWindow::rotateCounterClicked(){
-
+    emit rotateCounterClock();
 }
-void ButtonWindow::applyFilterClicked(){
 
+
+// Convolutions
+void ButtonWindow::gaussianClicked(){
+    emit gaussian();
+}
+void ButtonWindow::laplacianClicked(){
+    emit laplacian();
+}
+void ButtonWindow::highPassClicked(){
+    emit highPass();
+}
+void ButtonWindow::prewittHxClicked(){
+    emit prewittHx();
+}
+void ButtonWindow::prewittHyCLicked(){
+    emit prewittHy();
+}
+void ButtonWindow::sobelHxClicked(){
+    emit sobelHx();
+}
+void ButtonWindow::sobelHyClicked(){
+    emit sobelHy();
+}
+void ButtonWindow::convoluteClicked(){
+    emit applyFilter();
 }

@@ -22,7 +22,7 @@ void ImageWindow::verticalFlip(){
         memcpy(this->imageData+(i*stride),this->imageData+(height-i)*stride, sizeof(uchar)*stride);
         memcpy(this->imageData+(height-i)*stride, tmp, sizeof(uchar)*stride);
     }
-    free(tmp);
+    //free(tmp);
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
 }
@@ -60,6 +60,7 @@ void ImageWindow::greyScale(){
     }
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
+    greyImage = true;
 }
 
 void ImageWindow::quantization(int quant){
@@ -127,12 +128,16 @@ void ImageWindow::loadImage(char *filename){
     (void) jpeg_start_decompress(&cinfo);
     row_stride = cinfo.output_width * cinfo.output_components;
     buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+    this->width = cinfo.output_width;
+    this->height = cinfo.output_height;
 
     if (this->imageData == nullptr){
          this->imageData =  static_cast<JSAMPLE*>(calloc(cinfo.output_width*cinfo.output_height*cinfo.output_components, sizeof (JSAMPLE)));
     }
-    this->width = cinfo.output_width;
-    this->height = cinfo.output_height;
+    else{
+        this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*this->width*this->height*3));
+    }
+
 
     // Read scanlines, the rows of the image
     int i = 0;
@@ -219,21 +224,21 @@ void ImageWindow::saveImage(char* filename){
 }
 
 void ImageWindow::copyImage(){
+    greyImage = false;
     loadImage(this->filename);
-    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
-    setFixedSize(this->width, this->height);
-    label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
 }
 
 /* Trabalho 2*/
 int* ImageWindow::histogramComputation(JSAMPROW data){
-    greyScale();
-    int *hist = static_cast<int*>( calloc(256, sizeof(int)) );
-    for(int i = 0; i < 256; ++i){
-        *(hist+i) = 0;
+    if (!greyImage){
+        greyScale();
     }
 
+    int *hist = static_cast<int*>( calloc(256, sizeof(int)) );
+
     JDIMENSION stride = this->width*3;
+
     for(JDIMENSION i = 0; i < this->height; ++i){
         for(JDIMENSION j = 0; j < stride; j+=3){
             *( hist+static_cast<int>(*(data+i*stride+j))) +=1;
@@ -246,12 +251,12 @@ QImage ImageWindow::showHistogram(int *hist){
     //Normalize histogram to show
     double maximum, weight;
     maximum = *(hist);
-    for (int i = 0; i< 256; ++i) {
+    for (int i = 1; i< 256; ++i) {
         if ( *(hist+i) > maximum){
             maximum = *(hist+i);
         }
     }
-    weight = 256/maximum;
+    weight = 256.0/maximum;
 
     uchar *histImage;
     histImage=static_cast<uchar*>( calloc(256*3*256, sizeof(uchar)) );
@@ -424,10 +429,8 @@ void ImageWindow::equalizeHistogram(){
 }
 
 void ImageWindow::imageHistogram(){
-    QImage image2(this->imageData, this->width,this->height, QImage::Format_RGB888);
-    label->setPixmap(QPixmap::fromImage(image2));
-
     this->histogram = histogramComputation(this->imageData);
+
     QLabel *histLabel = new QLabel(histogramWindow);
     histLabel->setPixmap(QPixmap::fromImage(showHistogram(this->histogram)));
     histogramWindow->setWindowTitle("Histogram");
@@ -583,13 +586,22 @@ void ImageWindow::zoomOut(int h, int w){
             RGB[2] = static_cast<uchar>( ceil(sum[2]*1.0/num) );
             sum[0] = sum[1] = sum[2] = 0;
             num = 0;
-            memcpy( newImage + static_cast<int>(ceil(i*(newWidth*3.0)/h)) + static_cast<int>(ceil(j*1.0/w)), RGB, sizeof(uchar)*3);
+            int line = static_cast<int>(floor(i*(newWidth*3.0)/h)) ;
+            int column = static_cast<int>(floor(j*1.0/w));
+            memcpy( newImage + line + column, RGB, sizeof(uchar)*3);
         }
     }
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*newWidth*newHeight*3));
+    memcpy(this->imageData, newImage, sizeof(uchar)*3*newWidth*newHeight);
+    free(newImage);
 
-    QImage image2(newImage, newWidth, newHeight, QImage::Format_RGB888);
-    setFixedSize(newWidth, newHeight);
+    this->width = static_cast<JDIMENSION>(newWidth);
+    this->height = static_cast<JDIMENSION>(newHeight);
+
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
 
 }
 
@@ -644,6 +656,7 @@ void ImageWindow::zoomIn(){
     QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
     setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
 
 }
 
@@ -672,8 +685,9 @@ void ImageWindow::rotate90CounterClockwise(){
     this->height = static_cast<JDIMENSION>(newHeight);
 
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
-    //setFixedSize(this->width, this->height);
+    setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image));
+    label->adjustSize();
 
 }
 
@@ -702,6 +716,7 @@ void ImageWindow::rotate90Clockwise(){
     QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
     setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
 }
 
 
@@ -737,13 +752,14 @@ void ImageWindow::applyFilter(double *invKernel, bool add127){
             memcpy(newImage+i*this->width*3 + j+1, &shade, sizeof (uchar));
             memcpy(newImage+i*this->width*3 + j+2, &shade, sizeof (uchar));
         }
-    }
-
-    free(this->imageData);
-    this->imageData = newImage;
+    }   
+    this->imageData = static_cast<JSAMPROW>(realloc(this->imageData, sizeof(uchar)*this->width*this->height*3));
+    memcpy(this->imageData, newImage, sizeof(uchar)*3*this->width*this->height);
+    free(newImage);
     QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
     setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
 
 
 

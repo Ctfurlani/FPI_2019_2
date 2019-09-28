@@ -46,6 +46,7 @@ private:
     JSAMPROW imageData = nullptr;
     JDIMENSION width, height;
     QLabel *label = nullptr;
+    bool greyImage = false;
 
     QWidget *histogramWindow = nullptr;
     QWidget *equalizedImageWindow = nullptr;

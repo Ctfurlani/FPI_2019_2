@@ -53,9 +53,23 @@ int main(int argc, char *argv[])
     QObject::connect(&buttonWindow, SIGNAL( copy() ), &processedImageWindow, SLOT( copyImage()) );
     QObject::connect(&buttonWindow, SIGNAL( equalize() ), &processedImageWindow, SLOT( equalizeHistogram()) );
 
-
     QObject::connect(&buttonWindow, SIGNAL( zoomIn()), &processedImageWindow, SLOT( zoomIn()) );
     QObject::connect(&buttonWindow, SIGNAL( rotateClockwise()), &processedImageWindow, SLOT( rotate90Clockwise()));
+    QObject::connect(&buttonWindow, SIGNAL( rotateCounterClock()), &processedImageWindow, SLOT(rotate90CounterClockwise()));
+    QObject::connect(&buttonWindow, SIGNAL( zoomOut(int, int)), &processedImageWindow, SLOT(zoomOut(int, int)));
+
+
+    // between windows
+    QObject::connect(&buttonWindow, SIGNAL( gaussian()), &convWindow, SLOT( useGaussian()) );
+    QObject::connect(&buttonWindow, SIGNAL( laplacian()), &convWindow, SLOT( useLaplacian()) );
+    QObject::connect(&buttonWindow, SIGNAL( highPass()), &convWindow, SLOT( useHighPass()) );
+    QObject::connect(&buttonWindow, SIGNAL( prewittHx()), &convWindow, SLOT( usePrewittHx()) );
+    QObject::connect(&buttonWindow, SIGNAL( prewittHy()), &convWindow, SLOT( usePrewittHy()) );
+    QObject::connect(&buttonWindow, SIGNAL( sobelHx()), &convWindow, SLOT( useSobelHx()) );
+    QObject::connect(&buttonWindow, SIGNAL( sobelHy()), &convWindow, SLOT( useSobelHy()) );
+
+    QObject::connect(&buttonWindow, SIGNAL( applyFilter()), &convWindow, SLOT( convolute()));
+    QObject::connect(&convWindow, SIGNAL( sendConvMatrix(double*, bool) ), &processedImageWindow, SLOT( applyFilter(double*, bool) ));
     return a.exec();
     //return 0;
 

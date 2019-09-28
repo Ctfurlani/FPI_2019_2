@@ -35,7 +35,18 @@ signals:
     void equalize();
 
     void zoomIn();
+    void zoomOut(int, int);
     void rotateClockwise();
+    void rotateCounterClock();
+
+    void gaussian();
+    void laplacian();
+    void highPass();
+    void prewittHx();
+    void prewittHy();
+    void sobelHx();
+    void sobelHy();
+    void applyFilter();
 
 
 private slots:
@@ -58,7 +69,15 @@ private slots:
     void zoomInClicked();
     void rotateClockClicked();
     void rotateCounterClicked();
-    void applyFilterClicked();
+
+    void gaussianClicked();
+    void laplacianClicked();
+    void highPassClicked();
+    void prewittHxClicked();
+    void prewittHyCLicked();
+    void sobelHxClicked();
+    void sobelHyClicked();
+    void convoluteClicked();
 
 private:
     //QOL buttons
@@ -85,7 +104,7 @@ private:
     QPushButton *zoomOutButton;
 
     QPushButton *gaussianFilterButton;
-    QPushButton *laplacianFilteButtonr;
+    QPushButton *laplacianFilterButton;
     QPushButton *highPassFilterButton;
     QPushButton *prewittHxFilterButton;
     QPushButton *prewittHyFilterButton;
@@ -103,6 +122,8 @@ private:
     QGroupBox *advancedOpGroup;
     QGroupBox *zoomAndRotateGroup;
     QGroupBox *convolutionGroup;
+
+    bool convBool = false;
 
     void createSimpleGroup();
     void createAdvGroup();
