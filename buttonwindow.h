@@ -2,10 +2,19 @@
 #define BUTTONWINDOW_H
 
 #include <QApplication>
-#include <QLabel>
 #include <QWidget>
+#include <QLineEdit>
 
+
+QT_BEGIN_NAMESPACE
+class QSpinBox;
 class QPushButton;
+class QLineEdit;
+class QGroupBox;
+class QDoubleSpinBox;
+class QLabel;
+QT_END_NAMESPACE
+
 class ButtonWindow : public QWidget
 {
     Q_OBJECT
@@ -24,6 +33,10 @@ signals:
     void contrast(double);
     void negative();
     void equalize();
+
+    void zoomIn();
+    void rotateClockwise();
+
 
 private slots:
     void vertFlipClicked();
@@ -49,27 +62,53 @@ private slots:
 
 private:
     //QOL buttons
-
     QPushButton *quitButton;
     QPushButton *copyButton;
 
+    //Trab 1
     QPushButton *saveImageButton;
     QPushButton *vertFlipButton;
     QPushButton *horFlipButton;
     QPushButton *greyScaleButton;
     QPushButton *quantImageButton;
-
+    // Trab 2 Part 2
     QPushButton *histogramButton;
     QPushButton *brightButton;
     QPushButton *contrastButton;
     QPushButton *negativeButton;
     QPushButton *equalizeButton;
+    QPushButton *histMatchingButton;
 
-    QPushButton *rotateClockwise;
-    QPushButton *rotateCounterClockwise;
-    QPushButton *zoomIn;
-    QPushButton *zoomOut;
-    QPushButton *applyFilter;
+    QPushButton *rotateClockwiseButton;
+    QPushButton *rotateCounterClockwiseButton;
+    QPushButton *zoomInButton;
+    QPushButton *zoomOutButton;
+
+    QPushButton *gaussianFilterButton;
+    QPushButton *laplacianFilteButtonr;
+    QPushButton *highPassFilterButton;
+    QPushButton *prewittHxFilterButton;
+    QPushButton *prewittHyFilterButton;
+    QPushButton *sobelHxFilterButton;
+    QPushButton *sobelHyFilterButton;
+    QPushButton *convoluteButton;
+
+    QLineEdit *histMatchingTarget;
+    QSpinBox *quantShades;
+    QSpinBox *brightValue;
+    QDoubleSpinBox *contrastValue;
+    QSpinBox *zoomOutValue1, *zoomOutValue2;
+
+    QGroupBox *simpleOpGroup;
+    QGroupBox *advancedOpGroup;
+    QGroupBox *zoomAndRotateGroup;
+    QGroupBox *convolutionGroup;
+
+    void createSimpleGroup();
+    void createAdvGroup();
+    void createZoomGroup();
+    void createConvGroup();
+
 };
 
 #endif // BUTTONWINDOW_H

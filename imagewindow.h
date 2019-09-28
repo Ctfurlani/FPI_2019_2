@@ -45,7 +45,7 @@ private:
     char *filename = nullptr;
     JSAMPROW imageData = nullptr;
     JDIMENSION width, height;
-    QLabel *label;
+    QLabel *label = nullptr;
 
     QWidget *histogramWindow = nullptr;
     QWidget *equalizedImageWindow = nullptr;

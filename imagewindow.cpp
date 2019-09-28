@@ -22,7 +22,7 @@ void ImageWindow::verticalFlip(){
         memcpy(this->imageData+(i*stride),this->imageData+(height-i)*stride, sizeof(uchar)*stride);
         memcpy(this->imageData+(height-i)*stride, tmp, sizeof(uchar)*stride);
     }
-
+    free(tmp);
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
 }
@@ -220,6 +220,9 @@ void ImageWindow::saveImage(char* filename){
 
 void ImageWindow::copyImage(){
     loadImage(this->filename);
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    setFixedSize(this->width, this->height);
+    label->setPixmap(QPixmap::fromImage(image2));
 }
 
 /* Trabalho 2*/
@@ -668,9 +671,9 @@ void ImageWindow::rotate90CounterClockwise(){
     this->width = static_cast<JDIMENSION>(newWidth);
     this->height = static_cast<JDIMENSION>(newHeight);
 
-    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
-    setFixedSize(this->width, this->height);
-    label->setPixmap(QPixmap::fromImage(image2));
+    QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    //setFixedSize(this->width, this->height);
+    label->setPixmap(QPixmap::fromImage(image));
 
 }
 

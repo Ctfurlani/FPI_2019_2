@@ -5,6 +5,7 @@
 
 #include "buttonwindow.h"
 #include "imagewindow.h"
+#include "convolutionwindow.h"
 
 #include <QApplication>
 #include <QObject>
@@ -20,15 +21,12 @@ int main(int argc, char *argv[])
     //double filter[9] = {0, 0, 0, -0.5, 1, -0.5, 0, 0, 0};
 
     ImageWindow processedImageWindow, original;
+    ConvolutionWindow convWindow;
 
     processedImageWindow.setWindowTitle("Processed Image");
     processedImageWindow.loadImage(U);
     processedImageWindow.move(600,0);
-    processedImageWindow.applyFilter(filter, false);
-    //processedImageWindow.zoomOut(1,3);
     processedImageWindow.show();
-
-
 
     original.setWindowTitle("Original Image");
     original.loadImage(U);
@@ -36,9 +34,10 @@ int main(int argc, char *argv[])
     original.show();
 
     ButtonWindow buttonWindow;
-    buttonWindow.setWindowTitle("Options");
     buttonWindow.move(1150,0);
     buttonWindow.show();
+
+    convWindow.show();
 
     // Setup connections
     QObject::connect(&buttonWindow, SIGNAL( horFlip() ), &processedImageWindow, SLOT( horizontalFlip()) );
@@ -53,6 +52,10 @@ int main(int argc, char *argv[])
     QObject::connect(&buttonWindow, SIGNAL( negative() ), &processedImageWindow, SLOT( negative()) );
     QObject::connect(&buttonWindow, SIGNAL( copy() ), &processedImageWindow, SLOT( copyImage()) );
     QObject::connect(&buttonWindow, SIGNAL( equalize() ), &processedImageWindow, SLOT( equalizeHistogram()) );
+
+
+    QObject::connect(&buttonWindow, SIGNAL( zoomIn()), &processedImageWindow, SLOT( zoomIn()) );
+    QObject::connect(&buttonWindow, SIGNAL( rotateClockwise()), &processedImageWindow, SLOT( rotate90Clockwise()));
     return a.exec();
     //return 0;
 
