@@ -96,10 +96,13 @@ void ButtonWindow::createAdvGroup(){
     contrastLayout->addWidget(contrastValue, 0, 0);
     contrastLayout->addWidget(contrastButton, 0, 1);
 
+    histMatchingButton = new QPushButton("Histogram Matching", this);
+
     QVBoxLayout *advancedLayout = new QVBoxLayout;
     advancedLayout->addWidget(histogramButton);
     advancedLayout->addWidget(negativeButton);
     advancedLayout->addWidget(equalizeButton);
+    advancedLayout->addWidget(histMatchingButton);
     advancedLayout->addLayout(brightLayout);
     advancedLayout->addLayout(contrastLayout);
 
@@ -111,6 +114,7 @@ void ButtonWindow::createAdvGroup(){
     connect( contrastButton, SIGNAL( clicked(bool)), this, SLOT( contrastClicked()) );
     connect( negativeButton, SIGNAL( clicked(bool)) , this, SLOT(negativeClicked()));
     connect( equalizeButton, SIGNAL( clicked(bool)), this, SLOT(equalizeClicked()));
+    connect( histMatchingButton, SIGNAL( clicked(bool)), this, SLOT (histMatchingClicked()));
 
 }
 
@@ -237,6 +241,17 @@ void ButtonWindow::copyClicked(){
 }
 void ButtonWindow::equalizeClicked(){
     emit equalize();
+}
+
+void ButtonWindow::histMatchingClicked(){
+    QLabel *stringLabel = new QLabel(this);
+    bool ok;
+
+    QString text = QInputDialog::getText(this, tr("Histogram Matching"), tr("Image name:"), QLineEdit::Normal, nullptr, &ok);
+    if(ok and !text.isEmpty()){
+        stringLabel->setText(text);
+        emit histMatching(text.toUtf8().data());
+    }
 }
 
 void ButtonWindow::zoomOutClicked(){

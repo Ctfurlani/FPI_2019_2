@@ -42,22 +42,24 @@ void ImageWindow::horizontalFlip(){
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
 }
-
-void ImageWindow::greyScale(){
+void ImageWindow::greyScaleImage(JSAMPROW data, int w, int h){
     uchar L;
-    uint stride = this->width*3;
-    for (uint i=0; i < this->height; ++i){
+    uint stride = w*3;
+    for (uint i=0; i < h; ++i){
         for (uint j=0; j < stride; j+=3) {
-            uchar R = *(this->imageData+(i*stride)+j);
-            uchar G = *(this->imageData+(i*stride)+j+1);
-            uchar B = *(this->imageData+(i*stride)+j+2);
-            L = static_cast<uchar>(0.299*R+0.587*G+0.114*B);
+            uchar R = *(data+(i*stride)+j);
+            uchar G = *(data+(i*stride)+j+1);
+            uchar B = *(data+(i*stride)+j+2);
+            L = static_cast<uchar>(ceil(0.299*R+0.587*G+0.114*B));
             R=G=B=L;
-            memcpy(this->imageData+(i*stride)+j, &R, sizeof (uchar));
-            memcpy(this->imageData+(i*stride)+j+1, &G, sizeof (uchar));
-            memcpy(this->imageData+(i*stride)+j+2, &B, sizeof (uchar));
+            memcpy(data+(i*stride)+j, &R, sizeof (uchar));
+            memcpy(data+(i*stride)+j+1, &G, sizeof (uchar));
+            memcpy(data+(i*stride)+j+2, &B, sizeof (uchar));
         }
     }
+}
+void ImageWindow::greyScale(){
+    greyScaleImage(this->imageData, this->width, this->height);
     QImage image(this->imageData, this->width, this->height, QImage::Format_RGB888);
     label->setPixmap(QPixmap::fromImage(image));
     greyImage = true;
@@ -67,7 +69,7 @@ void ImageWindow::quantization(int quant){
     // eg. quant = 4, partition  = 256/4 = 64
     int partition = 256/quant;
     //Must be done with a grey scale image
-    greyScale();
+    greyScaleImage(this->imageData, this->width, this->height);
     uint stride = this->width*3;
     for(uint i = 0; i < this->height; ++i){
         for(uint j = 0; j < stride; j+=3){
@@ -231,10 +233,6 @@ void ImageWindow::copyImage(){
 
 /* Trabalho 2*/
 int* ImageWindow::histogramComputation(JSAMPROW data){
-    if (!greyImage){
-        greyScale();
-    }
-
     int *hist = static_cast<int*>( calloc(256, sizeof(int)) );
 
     JDIMENSION stride = this->width*3;
@@ -369,50 +367,59 @@ void ImageWindow::negative(){
 }
 
 void ImageWindow::equalizeHistogram(){
+    JSAMPROW equalizedImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+
+    int *hist = static_cast<int*>( calloc(256, sizeof(uchar)) );
+    int cumulativeHist[256];
     double doubleCumHist[256];
-    int cumulativeHistogram[256];
-    double alpha = 255.0/(this->height*this->width);
+    double alpha = 255.0/(this->width*this->height);
 
-    // new Image
-    JSAMPROW newImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+    JSAMPROW greyOriginalImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+    memcpy(greyOriginalImage, this->imageData, this->width*this->height*3*sizeof(uchar));
 
-    this->histogram = histogramComputation(this->imageData);
-    doubleCumHist[0] = alpha* *this->histogram;
+    if(!greyImage){
+        greyScaleImage(greyOriginalImage, this->width, this->height);
+    }
 
+    hist = histogramComputation(greyOriginalImage);
+
+
+    doubleCumHist[0] = *(hist) * alpha;
+    cumulativeHist[0] = static_cast<int>(ceil(doubleCumHist[0]));
     for (int i = 1; i < 256; ++i){
-        doubleCumHist[i] = doubleCumHist[i-1] + alpha* *(this->histogram+i);
-    }
-    for (int i = 0; i < 256; ++i){
-        cumulativeHistogram[i] = static_cast<int>( doubleCumHist[i] );
-        std::cout << cumulativeHistogram[i] << " ";
+        doubleCumHist[i] = doubleCumHist[i-1] + *(hist+i)*alpha;
+        cumulativeHist[i] = static_cast<int>(ceil(doubleCumHist[i]));
     }
 
-    for (int i = 0; i < this->height; ++i){
-        for (int j= 0; j < this->width*3; j+=3){
-            *(newImage+i*this->width*3+j) = cumulativeHistogram[*(this->imageData+i*this->width*3+j)];
-            *(newImage+i*this->width*3+j+1) = cumulativeHistogram[*(this->imageData+i*this->width*3+j+1)];
-            *(newImage+i*this->width*3+j+2) = cumulativeHistogram[*(this->imageData+i*this->width*3+j+2)];
+    for (int i = 0; i< this->height; ++i){
+        for (int j =0 ; j < this->width*3; j+=3){
+            *(equalizedImage+i*this->width*3+j) = cumulativeHist[ *(this->imageData+i*this->width*3+j) ];
+            *(equalizedImage+i*this->width*3+j+1) = cumulativeHist[ *(this->imageData+i*this->width*3+j+1) ];
+            *(equalizedImage+i*this->width*3+j+2) = cumulativeHist[ *(this->imageData+i*this->width*3+j+2) ];
         }
+
     }
-    // Original Histogram
+
+    // Show original histogram
     QLabel *histLabel = new QLabel(histogramWindow);
-    histLabel->setPixmap(QPixmap::fromImage(showHistogram(this->histogram)));
+    histLabel->setPixmap(QPixmap::fromImage(showHistogram(hist)));
     histogramWindow->setWindowTitle("Histogram");
     histogramWindow->setFixedSize(256,256);
     histogramWindow->show();
 
-    int *newHist = static_cast<int*>(calloc(256, sizeof (int)));
-    newHist = histogramComputation(newImage);
-    //Equalized histogram
+    // Show equalized histogram
+    JSAMPROW greyEqImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+    memcpy(greyEqImage, equalizedImage, sizeof(uchar)*this->width*this->height*3);
+    greyScaleImage(greyEqImage, this->width, this->height);
     QLabel *eqHistLabel = new QLabel(equalizedHistogramWindow);
-    eqHistLabel->setPixmap(QPixmap::fromImage(showHistogram((newHist))));
+    eqHistLabel->setPixmap(QPixmap::fromImage(showHistogram(histogramComputation(greyEqImage))));
     equalizedHistogramWindow->setWindowTitle("Eq Histogram");
     equalizedHistogramWindow->setFixedSize(256,256);
     equalizedHistogramWindow->show();
 
-    // Equalized Image
+    // Show equalized image
     QLabel *eqImage = new QLabel(equalizedImageWindow);
-    QImage image2(newImage, this->width, this->height, QImage::Format_RGB888);
+    QImage image2(equalizedImage, this->width, this->height, QImage::Format_RGB888);
     eqImage->setPixmap(QPixmap::fromImage(image2));
     equalizedImageWindow->setFixedSize(this->width, this->height);
     equalizedImageWindow->show();
@@ -420,6 +427,10 @@ void ImageWindow::equalizeHistogram(){
 }
 
 void ImageWindow::imageHistogram(){
+    if (!greyImage){
+     greyScaleImage(this->imageData, this->width, this->height);
+     this->greyImage = true;
+    }
     this->histogram = histogramComputation(this->imageData);
 
     QLabel *histLabel = new QLabel(histogramWindow);
@@ -430,93 +441,89 @@ void ImageWindow::imageHistogram(){
 }
 
 void ImageWindow::histogramMatching(char* filename){
-    int *histSrc, *histTarget;
-    int *histSrcCumulative, *histTargetCumulative;
-    int histMatching[256];
+    int *targetHist;
+    int targetCumHist[256];
+    int srcCumHist[256];
+    int *srcHist;
+    int HM[256];
 
-    histSrcCumulative = static_cast<int*>(calloc(256, sizeof(int)));
-    histTargetCumulative = static_cast<int*>(calloc(256, sizeof(int)));
+    double alphaSrc, alphaTrgt;
+    double dCumSrcHist[256];
+    double dCumTrgtHist[256];
 
-    JSAMPROW srcData = static_cast<JSAMPROW>(calloc(this->width*this->height*3, sizeof(uchar)));
-    JDIMENSION srcHeight, srcWidth;
-    char *srcFile = static_cast<char*>( calloc(strlen(this->filename), sizeof(char)));
-    //Compute src and target histograms
-
-    histSrc= histogramComputation(this->imageData);
-    // Saves the current image;
-    memcpy(srcData, this->imageData, sizeof(uchar)*this->width*this->height*3);
+    // Save src Image
+    JSAMPROW srcImage = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+    memcpy(srcImage, this->imageData, this->width*this->height*3*sizeof(uchar));
+    JDIMENSION srcWidth = this->width, srcHeight = this->height;
+    char* srcFile = static_cast<char*>( calloc(strlen(this->filename), sizeof(char)) );
     memcpy(srcFile, this->filename, sizeof(uchar)*strlen(this->filename));
-    srcHeight = this->height;
-    srcWidth = this->width;
 
-    // Load target to this object
+    if(!greyImage){
+        greyScaleImage(this->imageData, this->width, this->height);
+        greyScaleImage(srcImage, this->width, this->height);
+        greyImage = true;
+    }
+
+    // Sorce cumulative histogram
+    srcHist = histogramComputation(this->imageData);
+    alphaSrc = 255.0/(this->width*this->height);
+    dCumSrcHist[0]= *(srcHist)*alphaSrc;
+    srcCumHist[0] = static_cast<int>( ceil(dCumSrcHist[0]) );
+    for (int i = 1; i < 256; ++i){
+        dCumSrcHist[i] = dCumSrcHist[i-1]+ *(srcHist+i)*alphaSrc;
+        srcCumHist[i] = static_cast<int>( ceil(dCumSrcHist[i]) );
+    }
+
+    // Target loading and histogram comptation
     loadImage(filename);
-    histTarget = histogramComputation(this->imageData);
+    JSAMPROW greyTarget = static_cast<JSAMPROW>( calloc(this->width*this->height*3, sizeof(uchar)) );
+    memcpy(greyTarget, this->imageData, sizeof(uchar)*this->width*this->height*3);
+    //greyScaleImage(greyTarget, this->width, this->height);
+    targetHist = histogramComputation(greyTarget);
 
-    //Compute src and target normalized cumulative histograms
-    double alpha = static_cast<double>(255.0)/(srcWidth*srcHeight);
-    memcpy(histSrcCumulative, histSrc, sizeof(int)*256);
-
-    int maximum = *(histSrcCumulative);
+    alphaTrgt = 255.0/(this->width*this->height);
+    dCumTrgtHist[0] = *(targetHist)*alphaTrgt;
+    targetCumHist[0] = static_cast<int>( ceil(dCumSrcHist[0]) );
     for (int i = 1; i < 256; ++i){
-        *(histSrcCumulative+i) = static_cast<int>(*(histSrcCumulative +i-1) + alpha*histSrc[i] );
-        if ( *(histSrcCumulative+i) > maximum )
-            maximum = *(histSrcCumulative+i);
-    }
-    /*for (int i = 0; i <256; ++i){
-        *(histSrcCumulative+i) = *(histSrcCumulative+i) *255/maximum;
-    }*/
-
-    // Target
-    alpha = 255.0/(this->width*this->height);
-    maximum = *(this->imageData);
-    memcpy(histTargetCumulative, histTarget, sizeof(int)*256);
-    for (int i = 1; i < 256; ++i){
-        *(histTargetCumulative+i) = static_cast<int>(*(histTargetCumulative+i-1)+ histTarget[i] *alpha);
-        if ( *(histTargetCumulative+i) > maximum )
-            maximum = *(histTargetCumulative+i);
-    }
-
-    for (int i = 0; i <256; ++i){
-        *(histTargetCumulative+i) = *(histTargetCumulative+i) *255/maximum;
+        dCumTrgtHist[i] = dCumTrgtHist[i-1]+ *(targetHist+i)*alphaTrgt;
+        targetCumHist[i] = static_cast<int>( ceil(dCumTrgtHist[i]) );
     }
 
     for (int i = 0; i < 256; ++i){
-        int targetShade = closestShade(i, histSrcCumulative, histTargetCumulative);
-        histMatching[i] = histTarget[targetShade];
+        HM[i] = closestShade(i, srcCumHist, targetCumHist);
     }
 
+    //replenishes original image
     loadImage(srcFile);
-    uint stride = this->width*3;
-    for (uint i = 0; i < this->height; ++i){
-        for (uint j = 0; j < this->width*3; j+=3){
-            *(this->imageData+i*stride+j) = static_cast<uchar>(histMatching[*(srcData+i*stride+j)]);
-            *(this->imageData+i*stride+j+1) = static_cast<uchar>(histMatching[*(srcData+i*stride+j)]);
-            *(this->imageData+i*stride+j+2) = static_cast<uchar>(histMatching[*(srcData+i*stride+j)]);
+    memcpy(this->imageData, srcImage, sizeof(uchar)*3*this->width*this->height);
+
+    for (int i = 0; i < this->height; ++i){
+        for (int j = 0; j< this->width*3; j+=3){
+            *( this->imageData+i*this->width*3 +j )   = HM[ *(this->imageData+i*this->width*3 +j) ];
+            *( this->imageData+i*this->width*3 +j+1 ) = HM[ *(this->imageData+i*this->width*3 +j+1) ];
+            *( this->imageData+i*this->width*3 +j+2 ) = HM[ *(this->imageData+i*this->width*3 +j+2) ];
         }
     }
 
 
-
-
-    // Show Histograms for debugging
-    QLabel *eqHistLabel = new QLabel(histogramWindow);
-    eqHistLabel->setPixmap(QPixmap::fromImage(showHistogram(histTargetCumulative)));
-    histogramWindow->setWindowTitle("Target Histogram");
-    histogramWindow->setFixedSize(256,256);
-    histogramWindow->show();
-
-    this->histogram = histogramComputation(this->imageData);
-    QLabel *histLabel = new QLabel(equalizedHistogramWindow);
-    histLabel->setPixmap(QPixmap::fromImage(showHistogram(histSrcCumulative)));
-    equalizedHistogramWindow->setWindowTitle("Matched Histogram");
+    // Show target hist
+    QLabel *targetHistLabel = new QLabel(equalizedHistogramWindow);
+    targetHistLabel->setPixmap( QPixmap::fromImage(showHistogram(targetHist)) );
+    equalizedHistogramWindow->setWindowTitle("Target Histogram");
     equalizedHistogramWindow->setFixedSize(256,256);
     equalizedHistogramWindow->show();
 
-    free(srcData);
-    free(srcFile);
-    free(histSrcCumulative);
-    free(histTargetCumulative);
+    // Show new Histogram
+    QLabel *srcHistLabel = new QLabel(histogramWindow);
+    srcHistLabel->setPixmap( QPixmap::fromImage(showHistogram(histogramComputation(this->imageData))) );
+    histogramWindow->setWindowTitle("Histogram");
+    histogramWindow->setFixedSize(256,256);
+    histogramWindow->show();
+
+    QImage image2(this->imageData, this->width, this->height, QImage::Format_RGB888);
+    label->setPixmap(QPixmap::fromImage(image2));
+    label->adjustSize();
+    setFixedSize(this->width, this->height);
 }
 
 /*
@@ -533,7 +540,7 @@ int ImageWindow::closestShade(int shade, int *src, int *target){
 
     for (int i = 1; i < 256; ++i){
         distance = abs(srcHistCumulativeValue-*(target+i));
-        if (distance <= previous){
+        if (distance < previous){
             previous = distance;
             targetShade = i;
         }
@@ -752,7 +759,5 @@ void ImageWindow::applyFilter(double *invKernel, bool add127){
     setFixedSize(this->width, this->height);
     label->setPixmap(QPixmap::fromImage(image2));
     label->adjustSize();
-
-
 
 }

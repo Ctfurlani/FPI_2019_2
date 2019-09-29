@@ -33,6 +33,7 @@ signals:
     void contrast(double);
     void negative();
     void equalize();
+    void histMatching(char *);
 
     void zoomIn();
     void zoomOut(int, int);
@@ -63,6 +64,7 @@ private slots:
     void contrastClicked();
     void negativeClicked();
     void equalizeClicked();
+    void histMatchingClicked();
 
     // Trab 2 Part 2
     void zoomOutClicked();

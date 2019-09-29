@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     QObject::connect(&buttonWindow, SIGNAL( negative() ), &processedImageWindow, SLOT( negative()) );
     QObject::connect(&buttonWindow, SIGNAL( copy() ), &processedImageWindow, SLOT( copyImage()) );
     QObject::connect(&buttonWindow, SIGNAL( equalize() ), &processedImageWindow, SLOT( equalizeHistogram()) );
+    QObject::connect(&buttonWindow, SIGNAL( histMatching(char*)), &processedImageWindow, SLOT( histogramMatching(char*) ) );
 
     QObject::connect(&buttonWindow, SIGNAL( zoomIn()), &processedImageWindow, SLOT( zoomIn()) );
     QObject::connect(&buttonWindow, SIGNAL( rotateClockwise()), &processedImageWindow, SLOT( rotate90Clockwise()));

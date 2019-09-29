@@ -53,6 +53,7 @@ private:
     QWidget *equalizedHistogramWindow = nullptr;
     int *histogram = nullptr;
     int* histogramComputation(JSAMPROW data);
+    void greyScaleImage(JSAMPROW data, int w, int h);
     int closestShade(int shade, int *src, int *target);
 
 
