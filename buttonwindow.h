@@ -2,10 +2,19 @@
 #define BUTTONWINDOW_H
 
 #include <QApplication>
-#include <QLabel>
 #include <QWidget>
+#include <QLineEdit>
 
+
+QT_BEGIN_NAMESPACE
+class QSpinBox;
 class QPushButton;
+class QLineEdit;
+class QGroupBox;
+class QDoubleSpinBox;
+class QLabel;
+QT_END_NAMESPACE
+
 class ButtonWindow : public QWidget
 {
     Q_OBJECT
@@ -24,6 +33,22 @@ signals:
     void contrast(double);
     void negative();
     void equalize();
+    void histMatching(char *);
+
+    void zoomIn();
+    void zoomOut(int, int);
+    void rotateClockwise();
+    void rotateCounterClock();
+
+    void gaussian();
+    void laplacian();
+    void highPass();
+    void prewittHx();
+    void prewittHy();
+    void sobelHx();
+    void sobelHy();
+    void applyFilter();
+
 
 private slots:
     void vertFlipClicked();
@@ -39,37 +64,74 @@ private slots:
     void contrastClicked();
     void negativeClicked();
     void equalizeClicked();
+    void histMatchingClicked();
 
     // Trab 2 Part 2
     void zoomOutClicked();
     void zoomInClicked();
     void rotateClockClicked();
     void rotateCounterClicked();
-    void applyFilterClicked();
+
+    void gaussianClicked();
+    void laplacianClicked();
+    void highPassClicked();
+    void prewittHxClicked();
+    void prewittHyCLicked();
+    void sobelHxClicked();
+    void sobelHyClicked();
+    void convoluteClicked();
 
 private:
     //QOL buttons
-
     QPushButton *quitButton;
     QPushButton *copyButton;
 
+    //Trab 1
     QPushButton *saveImageButton;
     QPushButton *vertFlipButton;
     QPushButton *horFlipButton;
     QPushButton *greyScaleButton;
     QPushButton *quantImageButton;
-
+    // Trab 2 Part 2
     QPushButton *histogramButton;
     QPushButton *brightButton;
     QPushButton *contrastButton;
     QPushButton *negativeButton;
     QPushButton *equalizeButton;
+    QPushButton *histMatchingButton;
 
-    QPushButton *rotateClockwise;
-    QPushButton *rotateCounterClockwise;
-    QPushButton *zoomIn;
-    QPushButton *zoomOut;
-    QPushButton *applyFilter;
+    QPushButton *rotateClockwiseButton;
+    QPushButton *rotateCounterClockwiseButton;
+    QPushButton *zoomInButton;
+    QPushButton *zoomOutButton;
+
+    QPushButton *gaussianFilterButton;
+    QPushButton *laplacianFilterButton;
+    QPushButton *highPassFilterButton;
+    QPushButton *prewittHxFilterButton;
+    QPushButton *prewittHyFilterButton;
+    QPushButton *sobelHxFilterButton;
+    QPushButton *sobelHyFilterButton;
+    QPushButton *convoluteButton;
+
+    QLineEdit *histMatchingTarget;
+    QSpinBox *quantShades;
+    QSpinBox *brightValue;
+    QDoubleSpinBox *contrastValue;
+    QSpinBox *zoomOutValue1, *zoomOutValue2;
+
+    QGroupBox *simpleOpGroup;
+    QGroupBox *advancedOpGroup;
+    QGroupBox *zoomAndRotateGroup;
+    QGroupBox *convolutionGroup;
+
+    bool convBool = false;
+
+    void createSimpleGroup();
+    void createAdvGroup();
+    void createZoomGroup();
+    void createConvGroup();
+
 };
 
 #endif // BUTTONWINDOW_H

@@ -45,13 +45,15 @@ private:
     char *filename = nullptr;
     JSAMPROW imageData = nullptr;
     JDIMENSION width, height;
-    QLabel *label;
+    QLabel *label = nullptr;
+    bool greyImage = false;
 
     QWidget *histogramWindow = nullptr;
     QWidget *equalizedImageWindow = nullptr;
     QWidget *equalizedHistogramWindow = nullptr;
     int *histogram = nullptr;
     int* histogramComputation(JSAMPROW data);
+    void greyScaleImage(JSAMPROW data, int w, int h);
     int closestShade(int shade, int *src, int *target);
 
 

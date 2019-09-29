@@ -28,11 +28,13 @@ CONFIG += c++11
 
 SOURCES += \
         buttonwindow.cpp \
+        convolutionwindow.cpp \
         imagewindow.cpp \
         main.cpp
 
 HEADERS += \
         buttonwindow.h \
+        convolutionwindow.h \
         imagewindow.h \
         jpeg-9c/jpeglib.h
 
