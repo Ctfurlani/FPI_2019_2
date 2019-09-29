@@ -422,6 +422,7 @@ void ImageWindow::equalizeHistogram(){
     QImage image2(equalizedImage, this->width, this->height, QImage::Format_RGB888);
     eqImage->setPixmap(QPixmap::fromImage(image2));
     equalizedImageWindow->setFixedSize(this->width, this->height);
+    equalizedImageWindow->setWindowTitle("Equalized Image");
     equalizedImageWindow->show();
 
 }

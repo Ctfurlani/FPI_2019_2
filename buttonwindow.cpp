@@ -123,7 +123,7 @@ void ButtonWindow::createZoomGroup(){
 
     zoomInButton = new QPushButton(tr("Zoom in %1x%2").arg(2).arg(2), this);
     rotateClockwiseButton = new QPushButton("Rotate clockwise",this);
-    rotateCounterClockwiseButton = new QPushButton("Rotate counter clockwise", this);
+    rotateCounterClockwiseButton = new QPushButton("Rotate counterclockwise", this);
 
     QGridLayout *zoomOutLayout = new QGridLayout;
     zoomOutValue1 = new QSpinBox;

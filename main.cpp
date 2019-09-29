@@ -17,19 +17,16 @@ int main(int argc, char *argv[])
 {
     // Windows and buttons
     QApplication a(argc, argv);
-    double filter[9] = {0.0625, 0.125, 0.0625, 0.125, 0.25, 0.125, 0.0625, 0.125, 0.0625};
-    //double filter[9] = {0, 0, 0, -0.5, 1, -0.5, 0, 0, 0};
-
     ImageWindow processedImageWindow, original;
     ConvolutionWindow convWindow;
 
     processedImageWindow.setWindowTitle("Processed Image");
-    processedImageWindow.loadImage(U);
+    processedImageWindow.loadImage(argv[1]);
     processedImageWindow.move(600,0);
     processedImageWindow.show();
 
     original.setWindowTitle("Original Image");
-    original.loadImage(U);
+    original.loadImage(argv[1]);
     original.move(0,0);
     original.show();
 
